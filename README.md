@@ -8,3 +8,7 @@
 <p>This program was run on a Windows 10 system using <a href="http://www.mingw.org/">MinGW</a>.</p>
 <p>To execute the server use the following commands:  <br>gcc tcpServer.c -lws2_32 -o tcpServer<br>tcpServer</p>
 <p>To execute the client use the following commands: <br>gcc tcpClient.c -lws2_32 -o tcpClient<br>tcpClient</p>
+
+<h2>System Setup</h2>
+<p>Requires two PCs: one as client and one as the server.
+<br>Server needs the knock_server and web_server along with the three html test files and a large data file</p>
