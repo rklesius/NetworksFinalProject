@@ -6,21 +6,20 @@
 //	By Rachel Klesius and Garrett Moncrief, 11/21/18                            /
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <stdio.h>
-#include <string.h>
-#include <windows.h>  //for malloc in windows
+#include "CaesarCypher.h"
 
-char *Encrypt(char *msg, int length, int nonce) 
+char *Encrypt(char *msg, int length, int key) 
 {
+	printf("Original message sent to cypher: %s\n", msg);
 	int i;
 	char temp;
 	char *encrypted = (char *) malloc(sizeof(char) * length);
-	for(i = 0; i < length; i++)
+	for(i = 0; i < strlen(msg); i++)
 	{
 		//only change alphanumeric numbers, leave symbols
 		if(msg[i] >= 'a' && msg[i] <= 'z')
 		{
-			temp = msg[i] + nonce;
+			temp = msg[i] + key;
 			if(temp > 'z')
 			{
 				temp = temp - 'z' + 'a' - 1;
@@ -29,7 +28,7 @@ char *Encrypt(char *msg, int length, int nonce)
 		}
 		else if(msg[i] >= 'A' && msg[i] <= 'Z')
 		{
-			temp = msg[i] + nonce;
+			temp = msg[i] + key;
 			if(temp > 'z')
 			{
 				temp = temp - 'Z' + 'A' - 1;
@@ -38,23 +37,26 @@ char *Encrypt(char *msg, int length, int nonce)
 		}
 		else if(msg[i] >= '0' && msg[i] <= '9')
 		{
-			temp = msg[i] + nonce;
+			temp = msg[i] + key;
 			if(temp > '9')
 			{
 				temp = temp - '9' + '0' - 1;
 			}
 			encrypted[i] = temp;
 		}
-		else
+		else 
 		{
 			encrypted[i] = msg[i];
 		}
 	}
-	return encrypted;
+	printf("CaesarCypher encryption says: %s\n", encrypted);
+	return encrypted;  //TODO: this is fuckey, when it returns msg it's fine, but returning the encrypted message results in a "power of L" bullshit
+	//Somehow, part of the algoritm for encrypting and decrypting always leaves this fuckey symbol and I don't know how to fix it.  
+	//I will test the cypher on its own tomorrow
 }
 
 
-char *Decrypt(char *msg, int length, int nonce)
+char *Decrypt(char *msg, int length, int key)
 {
 	int i;
 	char temp;
@@ -64,7 +66,7 @@ char *Decrypt(char *msg, int length, int nonce)
 		//only change alphanumeric numbers, leave symbols
 		if(msg[i] >= 'a' && msg[i] <= 'z')
 		{
-			temp = msg[i] - nonce;
+			temp = msg[i] - key;
 			if(temp < 'a')
 			{
 				temp = temp + 'z' - 'a' + 1;
@@ -74,7 +76,7 @@ char *Decrypt(char *msg, int length, int nonce)
 		}
 		else if(msg[i] >= 'A' && msg[i] <= 'Z')
 		{
-			temp = msg[i] - nonce;
+			temp = msg[i] - key;
 			if(temp < 'A')
 			{
 				temp = temp + 'Z' - 'A' + 1;
@@ -84,7 +86,7 @@ char *Decrypt(char *msg, int length, int nonce)
 		}
 		else if(msg[i] >= '0' && msg[i] <= '9')
 		{
-			temp = msg[i] - nonce;
+			temp = msg[i] - key;
 			if(temp < '0')
 			{
 				temp = temp + '9' - '0' + 1;
@@ -112,21 +114,21 @@ void Deallocate(char *msg)
 /*
 int main(void)
 {
-	int nonce;	
+	int key;  //Shared secret between client and server	
 	char test1[] = "HELLO";
 	int length1 = 5;
 	char test2[] = "This is a really long test meant to simulate how long these strings can be";
 	int length2 = 75;
 	char test3[] = "we//are//going//to//use//a//lot//of//these";
 	int length3 = 42;
-	printf("Enter a nonce: ");
-	scanf("%d", &nonce);
-	nonce = nonce % 26;  //no point in making a nonce over 26, since it will just loop back but easy to break this
+	printf("Enter a key: ");
+	scanf("%d", &key);
+	key = key % 26;  //no point in making a key over 26, since it will just loop back but easy to break this
 	
 	printf("Message to encrypt: %s\n", test3);
-	char *result = Encrypt(test3, length3, nonce);
+	char *result = Encrypt(test3, length3, key);
 	printf("Message after encryption: %s\n", result);
-	char *original = Decrypt(result, length3, nonce);
+	char *original = Decrypt(result, length3, key);
 	printf("Message after decryption: %s\n\n", original);
 	
 	Deallocate(result);

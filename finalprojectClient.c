@@ -38,6 +38,8 @@
 #include <string.h>         // Needed for memcpy() and strcpy()
 #include <stdlib.h>         // Needed for exit()
 #include <fcntl.h>        // Needed for file i/o stuff
+#include "CaesarCypher.h"  //for homemade encryption 
+
 #ifdef WIN
   #include <windows.h>      // Needed for all Winsock stuff
   #include <process.h>    // Needed for _beginthread() and _endthread()
@@ -63,6 +65,8 @@
 #define  PORT_NUM         1050   // Port number used at the server
 #define  IP_ADDR    "127.0.0.1"  // IP address of server (*** HARDWIRED ***)
 #define  BUF_SIZE            4096     // Buffer size (big enough for a GET)
+#define SCRT 7  //Shared secret for Caesar Cypher, only approved clients will know this
+#define NONCE_SIZE 4 //other shared secret of the size of the NONCE
 
 //===== Main program ==========================================================
 int main()
@@ -120,14 +124,18 @@ int main()
 
   // >>> Step #4 <<<
   // Send to the server using the client socket
-  strcpy(out_buf, "This is a reply message from CLIENT to SERVER");
+  //send the ecrypted message sent to the client
+  char* encrypted = Encrypt(in_buf, NONCE_SIZE, SCRT);
+  printf("Encrypted message: %s\n", encrypted);
+  strcpy(out_buf, encrypted);
   retcode = send(client_s, out_buf, (strlen(out_buf) + 1), 0);
   if (retcode < 0)
   {
     printf("*** ERROR - send() failed \n");
     exit(-1);
   }
-
+  Deallocate(encrypted);  //deallocate encrypted memory
+   
   // >>> Step #5 <<<
   // Close the client socket
 #ifdef WIN

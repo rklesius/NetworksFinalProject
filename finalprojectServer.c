@@ -37,6 +37,9 @@
 #include <stdio.h>          // Needed for printf()
 #include <string.h>         // Needed for memcpy() and strcpy()
 #include <stdlib.h>         // Needed for exit()
+#include <time.h>           // For random number generation
+#include "CaesarCypher.h"  //for homemade encryption 
+
 #ifdef WIN
   #include <windows.h>      // Needed for all Winsock stuff
 #endif
@@ -51,6 +54,15 @@
 
 //----- Defines ---------------------------------------------------------------
 #define  PORT_NUM   1050    // Arbitrary port number for the server
+#define SCRT 7  //Shared secret for Caesar Cypher, clients should know this
+#define NONCE_SIZE 4 //other shared secret of the size of the nonce
+
+//Packet structure for security protocol
+//TODO Garrett add the stuff to prevent DoS attacks here, i.e. clock time
+struct SecurityPacket 
+{
+	char nonce[NONCE_SIZE];
+};
 
 //===== Main program ==========================================================
 int main()
@@ -122,7 +134,16 @@ int main()
 
   // >>> Step #5 <<<
   // Send to the client using the connect socket
-  strcpy(out_buf, "This is a message from SERVER to CLIENT");
+  // Send a random string of 4 uppercase characters (a 4 character nonce string) to the client
+  struct SecurityPacket connection1;
+  int i;
+  srand(time(0)); //seed current time for random generator
+  for(i = 0; i < NONCE_SIZE; i++)
+  {
+	  connection1.nonce[i] = rand() % 26 + 'A';  //find a random number between 0 and 25, increment alphabet by that much 
+  }
+  printf("Message sent to client: %s\n", connection1.nonce);
+  strcpy(out_buf, connection1.nonce);
   retcode = send(connect_s, out_buf, (strlen(out_buf) + 1), 0);
   if (retcode < 0)
   {
@@ -138,7 +159,22 @@ int main()
     printf("*** ERROR - recv() failed \n");
     exit(-1);
   }
-  printf("Received from client: %s \n", in_buf);
+  char *recieved = Decrypt(in_buf, NONCE_SIZE, SCRT);
+  printf("Message from client decrypted:  %s\n", recieved);
+  if (strcmp(in_buf, recieved) == 0)  //if decoded message is the same as the nonce, connect
+  {
+	  printf("Authentification successful, connecting.../n");
+  }
+  else  //otherwise, Trudy is afoot!  
+  {
+	  printf("Authenfication failed, go away Trudy!\n");
+	  //close the connection
+	  ///////////GARRETT, I don't know how to close the connection (or keep it open for that matter) maybe you should
+	  ///////////create a function to close so that way it would be easier.  How does it stay open in the first place?
+	  ///////////the code after it should close it no matter what, but it stayed open when we did ping and pong
+  }
+  
+   Deallocate(recieved);  //deallocate recieved message after decrypting
 
   // >>> Step #7 <<<
   // Close the welcome and connect sockets
