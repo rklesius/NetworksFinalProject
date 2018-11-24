@@ -100,9 +100,10 @@ void knock1 (char *ip_addr)
         (struct sockaddr *)&server_addr, &addr_len);
         if (retcode < 0)
         {
-        printf("*** ERROR - recvfrom() failed \n");
-        exit(-1);
+            printf("*** ERROR - recvfrom() failed \n");
+            exit(-1);
         }
+        break;
     }
     
      #ifdef WIN
@@ -153,6 +154,21 @@ void knock2 (char *ip_addr)
     exit(-1);
     }
     
+    // Wait for the PONG message to arrive
+    char in_buf[4096]; // Input buffer for data
+    int addr_len; // Internet address length
+    while(1)
+    {
+        addr_len = sizeof(server_addr);
+        retcode = recvfrom(client_s, in_buf, sizeof(in_buf), 0,
+        (struct sockaddr *)&server_addr, &addr_len);
+        if (retcode < 0)
+        {
+            printf("*** ERROR - recvfrom() failed \n");
+            exit(-1);
+        }
+        break;
+    }
     #ifdef WIN
     retcode = closesocket(client_s);
     if (retcode < 0)

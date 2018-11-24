@@ -41,6 +41,8 @@ int main()
 #endif
 
 answer1();
+answer2();
+answer3();
 }
 
 void answer1()
@@ -92,7 +94,7 @@ void answer1()
         if (strcmp(in_buf, "PING") != 0) continue;
         // Output PING received message
         memcpy(&client_ip_addr, &client_addr.sin_addr.s_addr, 4);
-        printf(" Received PING from address = %s and port = %d \n",
+        printf("Received PING from address = %s and port = %d \n",
         inet_ntoa(client_ip_addr), ntohs(client_addr.sin_port));
         // DEBUG (works for Windows only)...
         Sleep(100);
@@ -106,6 +108,7 @@ void answer1()
             printf("*** ERROR - sendto() failed \n");
             exit(-1);
         }
+        break;
     }
 }
 
@@ -135,6 +138,45 @@ if (retcode < 0)
         printf("*** ERROR - bind() failed \n");
         exit(-1);
     }
+
+    char out_buf[4096]; // Output buffer for data
+    char in_buf[4096]; // Input buffer for data
+    // Main loop (runs forever) for PING-PONG
+    printf("Waiting for PING on port %d \n", KNOCK2);
+    struct sockaddr_in client_addr; // Client Internet address
+    struct in_addr client_ip_addr; // Client IP address
+    int addr_len; // Internet address length
+    while(1)
+    {
+        // Wait to receive a message from client
+        addr_len = sizeof(client_addr);
+        retcode = recvfrom(server_s, in_buf, sizeof(in_buf), 0,
+        (struct sockaddr *)&client_addr, &addr_len);
+        if (retcode < 0)
+        {
+            printf("*** ERROR - recvfrom() failed \n");
+            exit(-1);
+        }
+        // If recieved message is not PING, then continue to top of loop
+        if (strcmp(in_buf, "PING") != 0) continue;
+        // Output PING received message
+        memcpy(&client_ip_addr, &client_addr.sin_addr.s_addr, 4);
+        printf("Received PING from address = %s and port = %d \n",
+        inet_ntoa(client_ip_addr), ntohs(client_addr.sin_port));
+        // DEBUG (works for Windows only)...
+        Sleep(100);
+        // Send PONG to the client
+        strcpy(out_buf, "PONG"); 
+
+         retcode = sendto(server_s, out_buf, (strlen(out_buf) + 1), 0,
+        (struct sockaddr *)&client_addr, sizeof(client_addr));
+        if (retcode < 0)
+        {
+            printf("*** ERROR - sendto() failed \n");
+            exit(-1);
+        }
+        break;
+    }
 }
 
 void answer3()
@@ -162,6 +204,45 @@ if (retcode < 0)
     {
         printf("*** ERROR - bind() failed \n");
         exit(-1);
+    }
+
+    char out_buf[4096]; // Output buffer for data
+    char in_buf[4096]; // Input buffer for data
+    // Main loop (runs forever) for PING-PONG
+    printf("Waiting for PING on port %d \n", KNOCK3);
+    struct sockaddr_in client_addr; // Client Internet address
+    struct in_addr client_ip_addr; // Client IP address
+    int addr_len; // Internet address length
+    while(1)
+    {
+        // Wait to receive a message from client
+        addr_len = sizeof(client_addr);
+        retcode = recvfrom(server_s, in_buf, sizeof(in_buf), 0,
+        (struct sockaddr *)&client_addr, &addr_len);
+        if (retcode < 0)
+        {
+            printf("*** ERROR - recvfrom() failed \n");
+            exit(-1);
+        }
+        // If recieved message is not PING, then continue to top of loop
+        if (strcmp(in_buf, "PING") != 0) continue;
+        // Output PING received message
+        memcpy(&client_ip_addr, &client_addr.sin_addr.s_addr, 4);
+        printf("Received PING from address = %s and port = %d \n",
+        inet_ntoa(client_ip_addr), ntohs(client_addr.sin_port));
+        // DEBUG (works for Windows only)...
+        Sleep(100);
+        // Send PONG to the client
+        strcpy(out_buf, "PONG"); 
+
+         retcode = sendto(server_s, out_buf, (strlen(out_buf) + 1), 0,
+        (struct sockaddr *)&client_addr, sizeof(client_addr));
+        if (retcode < 0)
+        {
+            printf("*** ERROR - sendto() failed \n");
+            exit(-1);
+        }
+        break;
     }
 
 }
