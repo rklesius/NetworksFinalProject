@@ -7,11 +7,11 @@
 <h2>How to Run</h2>
 <p>This program was run on a Windows 10 system using <a href="http://www.mingw.org/">MinGW</a>.</p>
 <p>
-   To execute the server use the following commands:  
+   To execute the server use the following commands:  <br>
    <code>mingw32-make server</code><br><code>server</code>
 </p>
 <p>
-   To execute the client use the following commands: 
+   To execute the client use the following commands: <br>
     <code>mingw32-make client</code><br><code>client</code>
 </p>
 
