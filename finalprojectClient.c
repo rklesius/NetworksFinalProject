@@ -14,12 +14,9 @@
 //=    Received from server: This is a message from SERVER to CLIENT          =
 //=---------------------------------------------------------------------------=
 //=  Build:                                                                   =
-//=    Windows (WIN):  Borland: bcc32 tcpClient.c                             =
-//=                    MinGW: gcc tcpClient.c -lws2_32 -o tcpClient           =
-//=                    Visual C: cl tcpClient.c wsock32.lib                   =
-//=    Unix/Mac (BSD): gcc tcpClient.c -lnsl -o tcpClient                     =
+//=    Windows (WIN):  MinGW: mingw32-make server				              =
 //=---------------------------------------------------------------------------=
-//=  Execute: tcpClient                                                       =
+//=  Execute: server                                                          =
 //=---------------------------------------------------------------------------=
 //=  Author: Ken Christensen                                                  =
 //=          University of South Florida                                      =
@@ -30,6 +27,7 @@
 //=            KJC (09/09/09) - Minor clean-up                                =
 //=            KJC (09/22/13) - Minor clean-up to fix warnings                =
 //=            KJC (09/14/17) - Updated build instructions                    =
+//= 		   REK (11/21/18) - Added Authentification Protocol               =
 //=============================================================================
 #define  WIN                // WIN for Winsock and BSD for BSD sockets
 
@@ -125,7 +123,7 @@ int main()
   // >>> Step #4 <<<
   // Send to the server using the client socket
   //send the ecrypted message sent to the client
-  char* encrypted = Encrypt(in_buf, NONCE_SIZE, SCRT);
+  char* encrypted = Encrypt(in_buf, SCRT);
   printf("Encrypted message: %s\n", encrypted);
   strcpy(out_buf, encrypted);
   retcode = send(client_s, out_buf, (strlen(out_buf) + 1), 0);
@@ -134,7 +132,7 @@ int main()
     printf("*** ERROR - send() failed \n");
     exit(-1);
   }
-  Deallocate(encrypted);  //deallocate encrypted memory
+  free(encrypted);  //deallocate encrypted memory
    
   // >>> Step #5 <<<
   // Close the client socket

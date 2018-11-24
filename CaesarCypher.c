@@ -8,14 +8,15 @@
 
 #include "CaesarCypher.h"
 
-char *Encrypt(char *msg, int length, int key) 
+char *Encrypt(char *msg, int key) 
 {
 	printf("Original message sent to cypher: %s\n", msg);
 	int i;
 	char temp;
-	char *encrypted = (char *) malloc(sizeof(char) * length);
+	char *encrypted = (char *) malloc(sizeof(char) * strlen(msg));
 	for(i = 0; i < strlen(msg); i++)
 	{
+		/*
 		//only change alphanumeric numbers, leave symbols
 		if(msg[i] >= 'a' && msg[i] <= 'z')
 		{
@@ -26,15 +27,20 @@ char *Encrypt(char *msg, int length, int key)
 			}
 			encrypted[i] = temp;
 		}
-		else if(msg[i] >= 'A' && msg[i] <= 'Z')
-		{
+		*/
+		if(msg[i] >= 'A' && msg[i] <= 'Z')
+		{	
+			printf("Char from msg: %c\n", msg[i]);
 			temp = msg[i] + key;
+		    printf("Temp at %d before if: %c\n", i, temp);
 			if(temp > 'z')
 			{
 				temp = temp - 'Z' + 'A' - 1;
 			}
+		    printf("Temp at %d: %c\n", i, temp);
 			encrypted[i] = temp;
 		}
+		/*
 		else if(msg[i] >= '0' && msg[i] <= '9')
 		{
 			temp = msg[i] + key;
@@ -48,21 +54,22 @@ char *Encrypt(char *msg, int length, int key)
 		{
 			encrypted[i] = msg[i];
 		}
+		*/
 	}
+	encrypted[i] = '\0';
 	printf("CaesarCypher encryption says: %s\n", encrypted);
-	return encrypted;  //TODO: this is fuckey, when it returns msg it's fine, but returning the encrypted message results in a "power of L" bullshit
-	//Somehow, part of the algoritm for encrypting and decrypting always leaves this fuckey symbol and I don't know how to fix it.  
-	//I will test the cypher on its own tomorrow
+	return encrypted;
 }
 
 
-char *Decrypt(char *msg, int length, int key)
+char *Decrypt(char *msg, int key)
 {
 	int i;
 	char temp;
-	char *decrypted = (char *) malloc(sizeof(char) * length);
-	for(i = 0; i < length; i++)
+	char *decrypted = (char *) malloc(sizeof(char) * strlen(msg));
+	for(i = 0; i < strlen(msg); i++)
 	{
+		/*
 		//only change alphanumeric numbers, leave symbols
 		if(msg[i] >= 'a' && msg[i] <= 'z')
 		{
@@ -71,19 +78,22 @@ char *Decrypt(char *msg, int length, int key)
 			{
 				temp = temp + 'z' - 'a' + 1;
 			}
+			printf("Temp at %d: %c", i, temp);
 			decrypted[i] = temp;
-			continue;
 		}
-		else if(msg[i] >= 'A' && msg[i] <= 'Z')
+		*/
+		if(msg[i] >= 'A' && msg[i] <= 'Z')
 		{
 			temp = msg[i] - key;
+		    printf("Temp at %d before if: %c\n", i, temp);
 			if(temp < 'A')
 			{
 				temp = temp + 'Z' - 'A' + 1;
 			}
+		    printf("Temp at %d: %c\n", i, temp);
 			decrypted[i] = temp;
-			continue;
 		}
+		/*
 		else if(msg[i] >= '0' && msg[i] <= '9')
 		{
 			temp = msg[i] - key;
@@ -97,13 +107,10 @@ char *Decrypt(char *msg, int length, int key)
 		{
 			decrypted[i] = msg[i];
 		}
+		*/
 	}
+	decrypted[i] = '\0';
 	return decrypted;
-}
-
-void Deallocate(char *msg)
-{
-	free(msg);
 }
 
 
@@ -131,8 +138,8 @@ int main(void)
 	char *original = Decrypt(result, length3, key);
 	printf("Message after decryption: %s\n\n", original);
 	
-	Deallocate(result);
-	Deallocate(original);
+	free(result);
+	free(original);
 	return 0;
 }
 */
