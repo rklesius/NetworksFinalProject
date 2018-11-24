@@ -79,9 +79,33 @@ void knock1 (char *ip_addr)
     server_addr.sin_addr.s_addr = inet_addr(ip_addr); // IP address to use
 
     char out_buf[4096]; // Output buffer for data
-    
+    strcpy(out_buf, "PING");
+     // Send the PING message to server 
     int retcode; // Return code
-    #ifdef WIN
+    retcode = sendto(client_s, out_buf, (strlen(out_buf) + 1), 0,
+    (struct sockaddr *)&server_addr, sizeof(server_addr));
+    if (retcode < 0)
+    {
+    printf("*** ERROR - sendto() failed \n");
+    exit(-1);
+    }
+
+     // Wait for the PONG message to arrive
+    char in_buf[4096]; // Input buffer for data
+    int addr_len; // Internet address length
+    while(1)
+    {
+        addr_len = sizeof(server_addr);
+        retcode = recvfrom(client_s, in_buf, sizeof(in_buf), 0,
+        (struct sockaddr *)&server_addr, &addr_len);
+        if (retcode < 0)
+        {
+        printf("*** ERROR - recvfrom() failed \n");
+        exit(-1);
+        }
+    }
+    
+     #ifdef WIN
     retcode = closesocket(client_s);
     if (retcode < 0)
     {
@@ -118,8 +142,17 @@ void knock2 (char *ip_addr)
     server_addr.sin_addr.s_addr = inet_addr(ip_addr); // IP address to use
 
     char out_buf[4096]; // Output buffer for data
-    
+    strcpy(out_buf, "PING");
+     // Send the PING message to server 
     int retcode; // Return code
+    retcode = sendto(client_s, out_buf, (strlen(out_buf) + 1), 0,
+    (struct sockaddr *)&server_addr, sizeof(server_addr));
+    if (retcode < 0)
+    {
+    printf("*** ERROR - sendto() failed \n");
+    exit(-1);
+    }
+    
     #ifdef WIN
     retcode = closesocket(client_s);
     if (retcode < 0)
@@ -157,8 +190,17 @@ void knock3 (char *ip_addr)
     server_addr.sin_addr.s_addr = inet_addr(ip_addr); // IP address to use
 
     char out_buf[4096]; // Output buffer for data
-
+    strcpy(out_buf, "PING");
+     // Send the PING message to server 
     int retcode; // Return code
+    retcode = sendto(client_s, out_buf, (strlen(out_buf) + 1), 0,
+    (struct sockaddr *)&server_addr, sizeof(server_addr));
+    if (retcode < 0)
+    {
+    printf("*** ERROR - sendto() failed \n");
+    exit(-1);
+    }
+    
     #ifdef WIN
     retcode = closesocket(client_s);
     if (retcode < 0)
