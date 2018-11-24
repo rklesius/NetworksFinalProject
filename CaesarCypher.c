@@ -16,31 +16,25 @@ char *Encrypt(char *msg, int key)
 	char *encrypted = (char *) malloc(sizeof(char) * strlen(msg));
 	for(i = 0; i < strlen(msg); i++)
 	{
-		/*
 		//only change alphanumeric numbers, leave symbols
 		if(msg[i] >= 'a' && msg[i] <= 'z')
 		{
-			temp = msg[i] + key;
-			if(temp > 'z')
+			temp = msg[i] + key;  //add key to msg
+			if(temp > 'z')  //if goes over edge, bring back to start
 			{
 				temp = temp - 'z' + 'a' - 1;
 			}
 			encrypted[i] = temp;
 		}
-		*/
 		if(msg[i] >= 'A' && msg[i] <= 'Z')
 		{	
-			printf("Char from msg: %c\n", msg[i]);
 			temp = msg[i] + key;
-		    printf("Temp at %d before if: %c\n", i, temp);
-			if(temp > 'z')
+			if(temp > 'Z')
 			{
 				temp = temp - 'Z' + 'A' - 1;
 			}
-		    printf("Temp at %d: %c\n", i, temp);
 			encrypted[i] = temp;
 		}
-		/*
 		else if(msg[i] >= '0' && msg[i] <= '9')
 		{
 			temp = msg[i] + key;
@@ -54,10 +48,8 @@ char *Encrypt(char *msg, int key)
 		{
 			encrypted[i] = msg[i];
 		}
-		*/
 	}
 	encrypted[i] = '\0';
-	printf("CaesarCypher encryption says: %s\n", encrypted);
 	return encrypted;
 }
 
@@ -69,7 +61,6 @@ char *Decrypt(char *msg, int key)
 	char *decrypted = (char *) malloc(sizeof(char) * strlen(msg));
 	for(i = 0; i < strlen(msg); i++)
 	{
-		/*
 		//only change alphanumeric numbers, leave symbols
 		if(msg[i] >= 'a' && msg[i] <= 'z')
 		{
@@ -78,22 +69,17 @@ char *Decrypt(char *msg, int key)
 			{
 				temp = temp + 'z' - 'a' + 1;
 			}
-			printf("Temp at %d: %c", i, temp);
 			decrypted[i] = temp;
 		}
-		*/
 		if(msg[i] >= 'A' && msg[i] <= 'Z')
 		{
 			temp = msg[i] - key;
-		    printf("Temp at %d before if: %c\n", i, temp);
 			if(temp < 'A')
 			{
 				temp = temp + 'Z' - 'A' + 1;
 			}
-		    printf("Temp at %d: %c\n", i, temp);
 			decrypted[i] = temp;
 		}
-		/*
 		else if(msg[i] >= '0' && msg[i] <= '9')
 		{
 			temp = msg[i] - key;
@@ -107,7 +93,6 @@ char *Decrypt(char *msg, int key)
 		{
 			decrypted[i] = msg[i];
 		}
-		*/
 	}
 	decrypted[i] = '\0';
 	return decrypted;
@@ -122,11 +107,11 @@ char *Decrypt(char *msg, int key)
 int main(void)
 {
 	int key;  //Shared secret between client and server	
-	char test1[] = "HELLO";
+	char test1[] = "HAIL JULIUS CAESAR!!!";
 	int length1 = 5;
 	char test2[] = "This is a really long test meant to simulate how long these strings can be";
 	int length2 = 75;
-	char test3[] = "we//are//going//to//use//a//lot//of//these";
+	char test3[] = "Shh!  Don't tell Trudy the shared secret!";
 	int length3 = 42;
 	printf("Enter a key: ");
 	scanf("%d", &key);
