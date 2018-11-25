@@ -65,7 +65,7 @@
 char *iparr[IPLOGSIZE];
 char **ipptr = iparr;
 int iplogtime[IPLOGSIZE];
-int ipcounter = 0; //increments to determine where to store new ips
+int ipcounter = 0; //increments to determine where to store new IPs
 
 struct SecurityPacket 
 {
@@ -107,7 +107,6 @@ int main()
   // declare clock functions and start program timer
   clock_t start_t, end_t, diff_t;
   start_t=clock();
-  printf("Starting of the program, start_t = %ld\n", start_t);
 
   // >>> Step #2 <<<
   // Fill-in server (my) address information and bind the welcome socket
@@ -126,62 +125,66 @@ int main()
   // Listen on welcome socket for a connection
   listen(welcome_s, 1);
 
-  // >>> Step #4 <<<
-  // Accept a connection.  The accept() will block and then return with
-  // connect_s assigned and client_addr filled-in.
-  printf("Waiting for accept() to complete... \n");
-  addr_len = sizeof(client_addr);
-  connect_s = accept(welcome_s, (struct sockaddr *)&client_addr, &addr_len);
-  if (connect_s < 0)
+  while (1)
   {
-    printf("*** ERROR - accept() failed \n");
-    exit(-1);
+    // >>> Step #4 <<<
+    // Accept a connection.  The accept() will block and then return with
+    // connect_s assigned and client_addr filled-in.
+    printf("Waiting for accept() to complete... \n");
+    addr_len = sizeof(client_addr);
+    connect_s = accept(welcome_s, (struct sockaddr *)&client_addr, &addr_len);
+    if (connect_s < 0)
+    {
+      printf("*** ERROR - accept() failed \n");
+      exit(-1);
+    }
+
+    // Copy the four-byte client IP address into an IP address structure
+    memcpy(&client_ip_addr, &client_addr.sin_addr.s_addr, 4);
+
+    // Print an informational message that accept completed
+    printf("Accept completed (IP address of client = %s  port = %d) \n",
+      inet_ntoa(client_ip_addr), ntohs(client_addr.sin_port));
+
+    // >>> Step #5 <<<
+    // Send to the client using the connect socket
+    // Send a random string of 4 uppercase characters (a 4 character nonce string) to the client
+    struct SecurityPacket connection1;
+    connection1.nonce = getRandomString(NONCE_SIZE);
+    printf("Message sent to client: %s\n", connection1.nonce);
+    strcpy(out_buf, connection1.nonce);
+    retcode = send(connect_s, out_buf, (strlen(out_buf) + 1), 0);
+    if (retcode < 0)
+    {
+      printf("*** ERROR - send() failed \n");
+      exit(-1);
+    }
+
+    // >>> Step #6 <<<
+    // Receive from the client using the connect socket
+    retcode = recv(connect_s, in_buf, sizeof(in_buf), 0);
+    if (retcode < 0)
+    {
+      printf("*** ERROR - recv() failed \n");
+      exit(-1);
+    }
+    char *recieved = Decrypt(in_buf, SCRT);
+    printf("Message from client decrypted:  %s\n", recieved);
+    
+    //Check if connection1.nonce is the same as recieved message
+    if (isEqual(recieved, connection1.nonce, NONCE_SIZE))  //if decoded message is the same as the nonce, connect
+    {
+      printf("Authentification successful, connecting...\n");
+    }
+    else  //otherwise, Trudy is afoot!  
+    {
+      printf("Authenfication failed, go away Trudy!\n");
+      
+    }
+    free(recieved);  //deallocate recieved message after decrypting
+    free(connection1.nonce);  //deallocate random string
   }
-
-  // Copy the four-byte client IP address into an IP address structure
-  memcpy(&client_ip_addr, &client_addr.sin_addr.s_addr, 4);
-
-  // Print an informational message that accept completed
-  printf("Accept completed (IP address of client = %s  port = %d) \n",
-    inet_ntoa(client_ip_addr), ntohs(client_addr.sin_port));
-
-  // >>> Step #5 <<<
-  // Send to the client using the connect socket
-  // Send a random string of 4 uppercase characters (a 4 character nonce string) to the client
-  struct SecurityPacket connection1;
-  connection1.nonce = getRandomString(NONCE_SIZE);
-  printf("Message sent to client: %s\n", connection1.nonce);
-  strcpy(out_buf, connection1.nonce);
-  retcode = send(connect_s, out_buf, (strlen(out_buf) + 1), 0);
-  if (retcode < 0)
-  {
-    printf("*** ERROR - send() failed \n");
-    exit(-1);
-  }
-
-  // >>> Step #6 <<<
-  // Receive from the client using the connect socket
-  retcode = recv(connect_s, in_buf, sizeof(in_buf), 0);
-  if (retcode < 0)
-  {
-    printf("*** ERROR - recv() failed \n");
-    exit(-1);
-  }
-  char *recieved = Decrypt(in_buf, SCRT);
-  printf("Message from client decrypted:  %s\n", recieved);
   
-  //Check if connection1.nonce is the same as recieved message
-  if (isEqual(recieved, connection1.nonce, NONCE_SIZE))  //if decoded message is the same as the nonce, connect
-  {
-	  printf("Authentification successful, connecting...\n");
-  }
-  else  //otherwise, Trudy is afoot!  
-  {
-	  printf("Authenfication failed, go away Trudy!\n");
-	  
-  }
-  free(recieved);  //deallocate recieved message after decrypting
-  free(connection1.nonce);  //deallocate random string
 
   // >>> Step #7 <<<
   // Close the welcome and connect sockets
