@@ -26,9 +26,9 @@
 #define KNOCK2 1150 // Arbitrary port number for the second knock
 #define KNOCK3 1250 // Arbitrary port number for the third knock
 
-void knock1 (char *ip_addr);
-void knock2 (char *ip_addr);
-void knock3 (char *ip_addr);
+int knock1 (char *ip_addr);
+int knock2 (char *ip_addr);
+int knock3 (char *ip_addr);
 //===== Main program ==========================================================
 int main(int argc, char *argv[])
 {
@@ -55,6 +55,8 @@ int main(int argc, char *argv[])
     knock2(ip_addr);
     knock3(ip_addr);
 
+    //if you've made it this far then the port knocking has succeeded
+
     return 0;
     
 
@@ -62,7 +64,7 @@ int main(int argc, char *argv[])
 
 //KNOCK 1
 
-void knock1 (char *ip_addr)
+int knock1 (char *ip_addr)
 {
     // Create a socket
     int client_s; // Client socket descriptor
@@ -126,7 +128,7 @@ void knock1 (char *ip_addr)
 
 //KNOCK 2
 
-void knock2 (char *ip_addr)
+int knock2 (char *ip_addr)
 {
     // Create a socket
     int client_s; // Client socket descriptor
@@ -153,7 +155,6 @@ void knock2 (char *ip_addr)
     printf("*** ERROR - sendto() failed \n");
     exit(-1);
     }
-    
     // Wait for the PONG message to arrive
     char in_buf[4096]; // Input buffer for data
     int addr_len; // Internet address length
@@ -189,7 +190,7 @@ void knock2 (char *ip_addr)
 
 //KNOCK 3
 
-void knock3 (char *ip_addr)
+int knock3 (char *ip_addr)
 {
     // Create a socket
     int client_s; // Client socket descriptor
