@@ -41,6 +41,7 @@
 
 #ifdef WIN
   #include <windows.h>      // Needed for all Winsock stuff
+  #include <time.h>
 #endif
 #ifdef BSD
   #include <sys/types.h>    // Needed for sockets stuff
@@ -49,15 +50,23 @@
   #include <arpa/inet.h>    // Needed for sockets stuff
   #include <fcntl.h>        // Needed for sockets stuff
   #include <netdb.h>        // Needed for sockets stuff
+  #include <time.h>
 #endif
 
 //----- Defines ---------------------------------------------------------------
 #define  PORT_NUM   1050    // Arbitrary port number for the server
 #define SCRT 7  //Shared secret for Caesar Cypher, clients should know this
 #define NONCE_SIZE 4 //other shared secret of the size of the nonce
+#define IPLOGSIZE 19 //how many IPs will be kept track of for ddos purposes
 
 //Packet structure for security protocol
-//TODO Garrett add the stuff to prevent DoS attacks here, i.e. clock time
+
+//used with checking for ddos attack
+char *iparr[IPLOGSIZE];
+char **ipptr = iparr;
+int iplogtime[IPLOGSIZE];
+int ipcounter = 0; //increments to determine where to store new ips
+
 struct SecurityPacket 
 {
 	char *nonce;
@@ -94,6 +103,11 @@ int main()
     printf("*** ERROR - socket() failed \n");
     exit(-1);
   }
+  // >>> Step 1b <<<
+  // declare clock functions and start program timer
+  clock_t start_t, end_t, diff_t;
+  start_t=clock();
+  printf("Starting of the program, start_t = %ld\n", start_t);
 
   // >>> Step #2 <<<
   // Fill-in server (my) address information and bind the welcome socket
