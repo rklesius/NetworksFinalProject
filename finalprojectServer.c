@@ -217,6 +217,7 @@ int main()
       if (isEqual(recieved, connection1.nonce, NONCE_SIZE))  //if decoded message is the same as the nonce, connect
       {
         printf("Authentification successful, connecting...\n");
+        
       }
       else  //otherwise, Trudy is afoot!  
       {
