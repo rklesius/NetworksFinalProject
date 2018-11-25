@@ -27,7 +27,7 @@
 //=            KJC (09/07/09) - Minor clean-up                                =
 //=            KJC (09/22/13) - Minor clean-up to fix warnings                =
 //=            KJC (09/14/17) - Updated build instructions                    =
-//= 		   REK (11/21/18) - Added Authentification Protocol               =
+//= 		   REK (11/21/18) - Added Authentification Protocol                   =
 //=============================================================================
 #define  WIN                // WIN for Winsock and BSD for BSD sockets
 
@@ -36,6 +36,7 @@
 #include <string.h>         // Needed for memcpy() and strcpy()
 #include <stdlib.h>         // Needed for exit()
 #include <stdbool.h>
+#include <unistd.h>         // mostly used for sleep funct in testing
 #include "CaesarCypher.h"  	// For homemade encryption 
 #include "Authentification.h" // For Authenfification protocol
 
@@ -105,7 +106,7 @@ int main()
   }
   // >>> Step 1b <<<
   // declare clock functions and start program timer
-  clock_t start_t, end_t, diff_t;
+  clock_t start_t, check_t;
   start_t=clock();
 
   // >>> Step #2 <<<
@@ -142,50 +143,90 @@ int main()
     // Copy the four-byte client IP address into an IP address structure
     memcpy(&client_ip_addr, &client_addr.sin_addr.s_addr, 4);
 
-    // Print an informational message that accept completed
-    printf("Accept completed (IP address of client = %s  port = %d) \n",
-      inet_ntoa(client_ip_addr), ntohs(client_addr.sin_port));
+    // >>> Step 4b <<<
+    // Check to make sure this isn't dirty dirty spam
+    int isitspam = 0;
+    check_t=clock();
+    char *incIP = inet_ntoa(client_ip_addr);
 
-    // >>> Step #5 <<<
-    // Send to the client using the connect socket
-    // Send a random string of 4 uppercase characters (a 4 character nonce string) to the client
-    struct SecurityPacket connection1;
-    connection1.nonce = getRandomString(NONCE_SIZE);
-    printf("Message sent to client: %s\n", connection1.nonce);
-    strcpy(out_buf, connection1.nonce);
-    retcode = send(connect_s, out_buf, (strlen(out_buf) + 1), 0);
-    if (retcode < 0)
-    {
-      printf("*** ERROR - send() failed \n");
-      exit(-1);
+    for (int i = 0; i < IPLOGSIZE; i++){
+      //if null spot in iplog, log this ip and time
+      if (!ipptr[i]) {
+        ipptr[i] = incIP;
+        iplogtime[i]=check_t;
+        break;
+      }
+      else if (strcmp(ipptr[i], incIP) == 0){
+        //if attempted access less than 3 seconds ago this is likely an attack
+        if ((check_t - iplogtime[i]) < 3000) {
+          printf("\n\n\n\nGET OUTTA HERE YOU DIRTY SPAMMER!\n\n\n\n");
+          isitspam = 1;
+          break;            
+        }
+        //if it's been more than that update time and carry on
+        else{
+          iplogtime[i] = check_t;
+          break;
+        } 
+      }
+      //if out of null spaces start overwriting old log
+      else if (i=IPLOGSIZE-1 && (strcmp(ipptr[i], incIP) != 0)){
+        ipptr[ipcounter] = incIP;
+        iplogtime[ipcounter] = check_t;
+        if (ipcounter = IPLOGSIZE){
+          ipcounter = 0;
+        }
+        else{
+          ipcounter++;
+        }
+      }
     }
 
-    // >>> Step #6 <<<
-    // Receive from the client using the connect socket
-    retcode = recv(connect_s, in_buf, sizeof(in_buf), 0);
-    if (retcode < 0)
+    if (isitspam == 0)
     {
-      printf("*** ERROR - recv() failed \n");
-      exit(-1);
-    }
-    char *recieved = Decrypt(in_buf, SCRT);
-    printf("Message from client decrypted:  %s\n", recieved);
-    
-    //Check if connection1.nonce is the same as recieved message
-    if (isEqual(recieved, connection1.nonce, NONCE_SIZE))  //if decoded message is the same as the nonce, connect
-    {
-      printf("Authentification successful, connecting...\n");
-    }
-    else  //otherwise, Trudy is afoot!  
-    {
-      printf("Authenfication failed, go away Trudy!\n");
+      // Print an informational message that accept completed
+      printf("Accept completed (IP address of client = %s  port = %d) \n",
+        inet_ntoa(client_ip_addr), ntohs(client_addr.sin_port));
+
+      // >>> Step #5 <<<
+      // Send to the client using the connect socket
+      // Send a random string of 4 uppercase characters (a 4 character nonce string) to the client
+      struct SecurityPacket connection1;
+      connection1.nonce = getRandomString(NONCE_SIZE);
+      printf("Message sent to client: %s\n", connection1.nonce);
+      strcpy(out_buf, connection1.nonce);
+      retcode = send(connect_s, out_buf, (strlen(out_buf) + 1), 0);
+      if (retcode < 0)
+      {
+        printf("*** ERROR - send() failed \n");
+        exit(-1);
+      }
+
+      // >>> Step #6 <<<
+      // Receive from the client using the connect socket
+      retcode = recv(connect_s, in_buf, sizeof(in_buf), 0);
+      if (retcode < 0)
+      {
+        printf("*** ERROR - recv() failed \n");
+        exit(-1);
+      }
+      char *recieved = Decrypt(in_buf, SCRT);
+      printf("Message from client decrypted:  %s\n", recieved);
       
+      //Check if connection1.nonce is the same as recieved message
+      if (isEqual(recieved, connection1.nonce, NONCE_SIZE))  //if decoded message is the same as the nonce, connect
+      {
+        printf("Authentification successful, connecting...\n");
+      }
+      else  //otherwise, Trudy is afoot!  
+      {
+        printf("Authenfication failed, go away Trudy!\n");
+        
+      }
+      free(recieved);  //deallocate recieved message after decrypting
+      free(connection1.nonce);  //deallocate random string
     }
-    free(recieved);  //deallocate recieved message after decrypting
-    free(connection1.nonce);  //deallocate random string
   }
-  
-
   // >>> Step #7 <<<
   // Close the welcome and connect sockets
 #ifdef WIN
