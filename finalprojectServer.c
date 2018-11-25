@@ -14,12 +14,9 @@
 //=    Received from client: This is a reply message from CLIENT to SERVER    =
 //=---------------------------------------------------------------------------=
 //=  Build:                                                                   =
-//=    Windows (WIN):  Borland: bcc32 tcpServer.c                             =
-//=                    MinGW: gcc tcpServer.c -lws2_32 -o tcpServer           =
-//=                    Visual C: cl tcpServer.c wsock32.lib                   =
-//=    Unix/Mac (BSD): gcc tcpServer.c -lnsl -o tcpServer                     =
+//=    Windows (WIN):  MinGW: mingw32-make client 				              =
 //=---------------------------------------------------------------------------=
-//=  Execute: tcpServer                                                       =
+//=  Execute: client                                                          =
 //=---------------------------------------------------------------------------=
 //=  Author: Ken Christensen                                                  =
 //=          University of South Florida                                      =
@@ -30,6 +27,7 @@
 //=            KJC (09/07/09) - Minor clean-up                                =
 //=            KJC (09/22/13) - Minor clean-up to fix warnings                =
 //=            KJC (09/14/17) - Updated build instructions                    =
+//= 		   REK (11/21/18) - Added Authentification Protocol               =
 //=============================================================================
 #define  WIN                // WIN for Winsock and BSD for BSD sockets
 
@@ -37,8 +35,9 @@
 #include <stdio.h>          // Needed for printf()
 #include <string.h>         // Needed for memcpy() and strcpy()
 #include <stdlib.h>         // Needed for exit()
-#include <time.h>           // For random number generation
-#include "CaesarCypher.h"  //for homemade encryption 
+#include <stdbool.h>
+#include "CaesarCypher.h"  	// For homemade encryption 
+#include "Authentification.h" // For Authenfification protocol
 
 #ifdef WIN
   #include <windows.h>      // Needed for all Winsock stuff
@@ -61,7 +60,7 @@
 //TODO Garrett add the stuff to prevent DoS attacks here, i.e. clock time
 struct SecurityPacket 
 {
-	char nonce[NONCE_SIZE];
+	char *nonce;
 };
 
 //===== Main program ==========================================================
@@ -136,12 +135,7 @@ int main()
   // Send to the client using the connect socket
   // Send a random string of 4 uppercase characters (a 4 character nonce string) to the client
   struct SecurityPacket connection1;
-  int i;
-  srand(time(0)); //seed current time for random generator
-  for(i = 0; i < NONCE_SIZE; i++)
-  {
-	  connection1.nonce[i] = rand() % 26 + 'A';  //find a random number between 0 and 25, increment alphabet by that much 
-  }
+  connection1.nonce = getRandomString(NONCE_SIZE);
   printf("Message sent to client: %s\n", connection1.nonce);
   strcpy(out_buf, connection1.nonce);
   retcode = send(connect_s, out_buf, (strlen(out_buf) + 1), 0);
@@ -159,22 +153,21 @@ int main()
     printf("*** ERROR - recv() failed \n");
     exit(-1);
   }
-  char *recieved = Decrypt(in_buf, NONCE_SIZE, SCRT);
+  char *recieved = Decrypt(in_buf, SCRT);
   printf("Message from client decrypted:  %s\n", recieved);
-  if (strcmp(in_buf, recieved) == 0)  //if decoded message is the same as the nonce, connect
+  
+  //Check if connection1.nonce is the same as recieved message
+  if (isEqual(recieved, connection1.nonce, NONCE_SIZE))  //if decoded message is the same as the nonce, connect
   {
-	  printf("Authentification successful, connecting.../n");
+	  printf("Authentification successful, connecting...\n");
   }
   else  //otherwise, Trudy is afoot!  
   {
 	  printf("Authenfication failed, go away Trudy!\n");
-	  //close the connection
-	  ///////////GARRETT, I don't know how to close the connection (or keep it open for that matter) maybe you should
-	  ///////////create a function to close so that way it would be easier.  How does it stay open in the first place?
-	  ///////////the code after it should close it no matter what, but it stayed open when we did ping and pong
+	  
   }
-  
-   Deallocate(recieved);  //deallocate recieved message after decrypting
+  free(recieved);  //deallocate recieved message after decrypting
+  free(connection1.nonce);  //deallocate random string
 
   // >>> Step #7 <<<
   // Close the welcome and connect sockets

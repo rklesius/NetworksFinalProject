@@ -1,4 +1,11 @@
-//Header File for the CaesarCypher.c
+//////////////////////////////////////////////////////////////////////////////////////
+//	This is the header for a simple Caesar Cypher (CaesarCypher.c) that works with  /
+//  any random integer to seed the data for the cypher. It ignores punctuation,    /
+//  leaving it unchanged, so that in other security protocols the different       /
+//  parts can be easily identified.                                              /
+//	By Rachel Klesius and Garrett Moncrief, 11/21/18                            /
+////////////////////////////////////////////////////////////////////////////////
+
 #ifndef CAESAR_CYPHER_H
 #define CAESAR_CYPHER_H
 
@@ -6,8 +13,7 @@
 #include <string.h>
 #include <windows.h>  //for malloc in windows
 
-char *Encrypt(char *msg, int length, int key);
-char *Decrypt(char *msg, int length, int key);
-void Deallocate(char *msg);
+char *Encrypt(char *msg, int key);
+char *Decrypt(char *msg, int key);
 
 #endif

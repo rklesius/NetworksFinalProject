@@ -8,28 +8,28 @@
 
 #include "CaesarCypher.h"
 
-char *Encrypt(char *msg, int length, int key) 
+char *Encrypt(char *msg, int key) 
 {
 	printf("Original message sent to cypher: %s\n", msg);
 	int i;
 	char temp;
-	char *encrypted = (char *) malloc(sizeof(char) * length);
+	char *encrypted = (char *) malloc(sizeof(char) * strlen(msg));
 	for(i = 0; i < strlen(msg); i++)
 	{
 		//only change alphanumeric numbers, leave symbols
 		if(msg[i] >= 'a' && msg[i] <= 'z')
 		{
-			temp = msg[i] + key;
-			if(temp > 'z')
+			temp = msg[i] + key;  //add key to msg
+			if(temp > 'z')  //if goes over edge, bring back to start
 			{
 				temp = temp - 'z' + 'a' - 1;
 			}
 			encrypted[i] = temp;
 		}
-		else if(msg[i] >= 'A' && msg[i] <= 'Z')
-		{
+		if(msg[i] >= 'A' && msg[i] <= 'Z')
+		{	
 			temp = msg[i] + key;
-			if(temp > 'z')
+			if(temp > 'Z')
 			{
 				temp = temp - 'Z' + 'A' - 1;
 			}
@@ -49,19 +49,17 @@ char *Encrypt(char *msg, int length, int key)
 			encrypted[i] = msg[i];
 		}
 	}
-	printf("CaesarCypher encryption says: %s\n", encrypted);
-	return encrypted;  //TODO: this is fuckey, when it returns msg it's fine, but returning the encrypted message results in a "power of L" bullshit
-	//Somehow, part of the algoritm for encrypting and decrypting always leaves this fuckey symbol and I don't know how to fix it.  
-	//I will test the cypher on its own tomorrow
+	encrypted[i] = '\0';
+	return encrypted;
 }
 
 
-char *Decrypt(char *msg, int length, int key)
+char *Decrypt(char *msg, int key)
 {
 	int i;
 	char temp;
-	char *decrypted = (char *) malloc(sizeof(char) * length);
-	for(i = 0; i < length; i++)
+	char *decrypted = (char *) malloc(sizeof(char) * strlen(msg));
+	for(i = 0; i < strlen(msg); i++)
 	{
 		//only change alphanumeric numbers, leave symbols
 		if(msg[i] >= 'a' && msg[i] <= 'z')
@@ -72,9 +70,8 @@ char *Decrypt(char *msg, int length, int key)
 				temp = temp + 'z' - 'a' + 1;
 			}
 			decrypted[i] = temp;
-			continue;
 		}
-		else if(msg[i] >= 'A' && msg[i] <= 'Z')
+		if(msg[i] >= 'A' && msg[i] <= 'Z')
 		{
 			temp = msg[i] - key;
 			if(temp < 'A')
@@ -82,7 +79,6 @@ char *Decrypt(char *msg, int length, int key)
 				temp = temp + 'Z' - 'A' + 1;
 			}
 			decrypted[i] = temp;
-			continue;
 		}
 		else if(msg[i] >= '0' && msg[i] <= '9')
 		{
@@ -98,12 +94,8 @@ char *Decrypt(char *msg, int length, int key)
 			decrypted[i] = msg[i];
 		}
 	}
+	decrypted[i] = '\0';
 	return decrypted;
-}
-
-void Deallocate(char *msg)
-{
-	free(msg);
 }
 
 
@@ -115,11 +107,11 @@ void Deallocate(char *msg)
 int main(void)
 {
 	int key;  //Shared secret between client and server	
-	char test1[] = "HELLO";
+	char test1[] = "HAIL JULIUS CAESAR!!!";
 	int length1 = 5;
 	char test2[] = "This is a really long test meant to simulate how long these strings can be";
 	int length2 = 75;
-	char test3[] = "we//are//going//to//use//a//lot//of//these";
+	char test3[] = "Shh!  Don't tell Trudy the shared secret!";
 	int length3 = 42;
 	printf("Enter a key: ");
 	scanf("%d", &key);
@@ -131,8 +123,8 @@ int main(void)
 	char *original = Decrypt(result, length3, key);
 	printf("Message after decryption: %s\n\n", original);
 	
-	Deallocate(result);
-	Deallocate(original);
+	free(result);
+	free(original);
 	return 0;
 }
 */
