@@ -10,6 +10,7 @@
 #include <stdlib.h> // Needed for exit()
 #ifdef WIN
  #include <windows.h> // Needed for all Winsock stuff
+ #include <sys/timeb.h> // Needed for ftime() and timeb structure
 #endif
 #ifdef BSD
  #include <sys/types.h> // Needed for sockets stuff
@@ -18,40 +19,57 @@
  #include <arpa/inet.h> // Needed for sockets stuff
  #include <fcntl.h> // Needed for sockets stuff
  #include <netdb.h> // Needed for sockets stuff
+ #include <sys/timeb.h> // Needed for ftime() and timeb structure
 #endif
 //----- Defines --------------------------------------------------------------
 #define KNOCK1 1050 // Arbitrary port number for the first knock
 #define KNOCK2 1150 // Arbitrary port number for the second knock
 #define KNOCK3 1250 // Arbitrary port number for the third knock
 
-void answer1 ();
-void answer2 ();
-void answer3 ();
+//STUFF NEEDED FOR TIMER
+ struct timeb start; // Start time structure
+ struct timeb stop; // Stop time structure
+ double elapsed; // Elapsed time in seconds
+ int ipcounter; //iterates to next posistion on iplog
+
+//STUFF NEEDED FOR IP LOGGING
+char *iplog[9]; //keeps track of recent IP address logs
+float logtime[9]; //corresponds with iplog to give time ip logged in
+
+
+int answer1 ();
+int answer2 ();
+int answer3 ();
 void weblite1();
 //===== Main program =========================================================
 int main()
 {
-#ifdef WIN
- WORD wVersionRequested = MAKEWORD(1,1); // Stuff for WSA functions
- WSADATA wsaData; // Stuff for WSA functions
-#endif
+    #ifdef WIN
+    WORD wVersionRequested = MAKEWORD(1,1); // Stuff for WSA functions
+    WSADATA wsaData; // Stuff for WSA functions
+    #endif
 
-#ifdef WIN
- // This stuff initializes winsock
- WSAStartup(wVersionRequested, &wsaData);
-#endif
+    #ifdef WIN
+    // This stuff initializes winsock
+    WSAStartup(wVersionRequested, &wsaData);
+    #endif
 
-answer1();
-answer2();
-answer3();
-weblite1();
+    ftime(&start); //start the time when starting the server
 
-//we'll probably need these in a while loop and have a timeout that breaks answer2 and answer3
+    while (1)
+    {
+        int check1, check2, check3; //return values for functions
+        check1 = answer1();
+        answer2();
+        answer3();
+        weblite1(); //will probably need to move this to answer3 to extend knock
+
+}
 
 //if you've made it this far the port knocking was successful...opening for 10 seconds
 }
 
-void answer1()
+int answer1()
 {
     int server_s; // Server socket descriptor
     // Create a socket
@@ -85,6 +103,9 @@ void answer1()
     struct sockaddr_in client_addr; // Client Internet address
     struct in_addr client_ip_addr; // Client IP address
     int addr_len; // Internet address length
+
+    //CHECK THAT IP ADDRESS HASN'T RECENTLY TRIED ACCESSING
+
     while(1)
     {
         // Wait to receive a message from client
@@ -118,7 +139,7 @@ void answer1()
     }
 }
 
-void answer2()
+int answer2()
 {
 int server_s; // Server socket descriptor
 // Create a socket
@@ -185,7 +206,7 @@ if (retcode < 0)
     }
 }
 
-void answer3()
+int answer3()
 {
 int server_s; // Server socket descriptor
 // Create a socket
@@ -329,41 +350,41 @@ void weblite1()
     exit(-1);
   }
 
-  // Fill-in server (my) address information and bind the socket
-  server_addr.sin_family = AF_INET;
-  server_addr.sin_port = htons(PORT_NUM);
-  server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-  retcode = bind(server_s, (struct sockaddr *)&server_addr, sizeof(server_addr));
-  if (retcode < 0)
-  {
-    printf("*** ERROR - bind() failed \n");
-    exit(-1);
-  }
-
-  // Set-up the listen
-  listen(server_s, 100);
-
-  // Main loop to accept connections and then spin-off thread to handle the GET
-  printf(">>> weblite is running on port %d <<< \n", PORT_NUM);
-  while(1)
-  {
-    addr_len = sizeof(client_addr);
-    client_s = accept(server_s, (struct sockaddr *)&client_addr, &addr_len);
-    if (client_s == -1)
+    // Fill-in server (my) address information and bind the socket
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(PORT_NUM);
+    server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    retcode = bind(server_s, (struct sockaddr *)&server_addr, sizeof(server_addr));
+    if (retcode < 0)
     {
-      printf("ERROR - Unable to create a socket \n");
-      exit(1);
+        printf("*** ERROR - bind() failed \n");
+        exit(-1);
     }
 
-#ifdef WIN
-    if (_beginthread(handle_get, 4096, (void *)client_s) < 0)
-#endif
-#ifdef BSD
-    if (pthread_create(&thread_id, NULL, handle_get, (void *)client_s) != 0)
-#endif
+    // Set-up the listen
+    listen(server_s, 100);
+
+    // Main loop to accept connections and then spin-off thread to handle the GET
+    printf(">>> weblite is running on port %d <<< \n", PORT_NUM);
+    while(1)
     {
-      printf("ERROR - Unable to create a thread to handle the GET \n");
-      exit(1);
+        addr_len = sizeof(client_addr);
+        client_s = accept(server_s, (struct sockaddr *)&client_addr, &addr_len);
+        if (client_s == -1)
+        {
+        printf("ERROR - Unable to create a socket \n");
+        exit(1);
+        }
+
+    #ifdef WIN
+        if (_beginthread(handle_get, 4096, (void *)client_s) < 0)
+    #endif
+    #ifdef BSD
+        if (pthread_create(&thread_id, NULL, handle_get, (void *)client_s) != 0)
+    #endif
+        {
+        printf("ERROR - Unable to create a thread to handle the GET \n");
+        exit(1);
     }
   }
 }
