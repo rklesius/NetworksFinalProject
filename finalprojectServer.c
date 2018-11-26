@@ -39,10 +39,15 @@
 #include <unistd.h>         // mostly used for sleep funct in testing
 #include "CaesarCypher.h"  	// For homemade encryption 
 #include "Authentification.h" // For Authenfification protocol
+#include "weblite1.h"
 
 #ifdef WIN
   #include <windows.h>      // Needed for all Winsock stuff
   #include <time.h>
+  #include <conio.h>
+  #include <process.h> 
+  #include <process.h>    // Needed for _beginthread() and _endthread()
+  #include <stddef.h>     // Needed for _threadid
 #endif
 #ifdef BSD
   #include <sys/types.h>    // Needed for sockets stuff
@@ -95,39 +100,40 @@ int main()
   WSAStartup(wVersionRequested, &wsaData);
 #endif
 
-  // >>> Step #1 <<<
-  // Create a welcome socket
-  //   - AF_INET is Address Family Internet and SOCK_STREAM is streams
-  welcome_s = socket(AF_INET, SOCK_STREAM, 0);
-  if (welcome_s < 0)
-  {
-    printf("*** ERROR - socket() failed \n");
-    exit(-1);
-  }
-  // >>> Step 1b <<<
-  // declare clock functions and start program timer
-  clock_t start_t, check_t;
-  start_t=clock();
 
-  // >>> Step #2 <<<
-  // Fill-in server (my) address information and bind the welcome socket
-  server_addr.sin_family = AF_INET;                 // Address family to use
-  server_addr.sin_port = htons(PORT_NUM);           // Port number to use
-  server_addr.sin_addr.s_addr = htonl(INADDR_ANY);  // Listen on any IP address
-  retcode = bind(welcome_s, (struct sockaddr *)&server_addr,
-    sizeof(server_addr));
-  if (retcode < 0)
-  {
-    printf("*** ERROR - bind() failed \n");
-    exit(-1);
-  }
-
-  // >>> Step #3 <<<
-  // Listen on welcome socket for a connection
-  listen(welcome_s, 1);
 
   while (1)
   {
+      // >>> Step #1 <<<
+      // Create a welcome socket
+      //   - AF_INET is Address Family Internet and SOCK_STREAM is streams
+      welcome_s = socket(AF_INET, SOCK_STREAM, 0);
+      if (welcome_s < 0)
+      {
+        printf("*** ERROR - socket() failed \n");
+        exit(-1);
+      }
+      // >>> Step 1b <<<
+      // declare clock functions and start program timer
+      clock_t start_t, check_t;
+      start_t=clock();
+
+      // >>> Step #2 <<<
+      // Fill-in server (my) address information and bind the welcome socket
+      server_addr.sin_family = AF_INET;                 // Address family to use
+      server_addr.sin_port = htons(PORT_NUM);           // Port number to use
+      server_addr.sin_addr.s_addr = htonl(INADDR_ANY);  // Listen on any IP address
+      retcode = bind(welcome_s, (struct sockaddr *)&server_addr,
+        sizeof(server_addr));
+      if (retcode < 0)
+      {
+        printf("*** ERROR - bind() failed \n");
+        exit(-1);
+      }
+
+      // >>> Step #3 <<<
+      // Listen on welcome socket for a connection
+      listen(welcome_s, 1);
     // >>> Step #4 <<<
     // Accept a connection.  The accept() will block and then return with
     // connect_s assigned and client_addr filled-in.
@@ -217,7 +223,7 @@ int main()
       if (isEqual(recieved, connection1.nonce, NONCE_SIZE))  //if decoded message is the same as the nonce, connect
       {
         printf("Authentification successful, connecting...\n");
-        
+        weblite1();
       }
       else  //otherwise, Trudy is afoot!  
       {
@@ -226,38 +232,40 @@ int main()
       }
       free(recieved);  //deallocate recieved message after decrypting
       free(connection1.nonce);  //deallocate random string
+
+        // >>> Step #7 <<<
+        // Close the welcome and connect sockets
+      #ifdef WIN
+        retcode = closesocket(welcome_s);
+        if (retcode < 0)
+        {
+          printf("*** ERROR - closesocket() failed \n");
+          exit(-1);
+        }
+        retcode = closesocket(connect_s);
+        if (retcode < 0)
+        {
+          printf("*** ERROR - closesocket() failed \n");
+          exit(-1);
+        }
+      #endif
+      #ifdef BSD
+        retcode = close(welcome_s);
+        if (retcode < 0)
+        {
+          printf("*** ERROR - close() failed \n");
+          exit(-1);
+        }
+        retcode = close(connect_s);
+        if (retcode < 0)
+        {
+          printf("*** ERROR - close() failed \n");
+          exit(-1);
+        }
+      #endif
     }
   }
-  // >>> Step #7 <<<
-  // Close the welcome and connect sockets
-#ifdef WIN
-  retcode = closesocket(welcome_s);
-  if (retcode < 0)
-  {
-    printf("*** ERROR - closesocket() failed \n");
-    exit(-1);
-  }
-  retcode = closesocket(connect_s);
-  if (retcode < 0)
-  {
-    printf("*** ERROR - closesocket() failed \n");
-    exit(-1);
-  }
-#endif
-#ifdef BSD
-  retcode = close(welcome_s);
-  if (retcode < 0)
-  {
-    printf("*** ERROR - close() failed \n");
-    exit(-1);
-  }
-  retcode = close(connect_s);
-  if (retcode < 0)
-  {
-    printf("*** ERROR - close() failed \n");
-    exit(-1);
-  }
-#endif
+
 
 #ifdef WIN
   // Clean-up winsock
