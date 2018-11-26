@@ -94,42 +94,42 @@ int main()
   char                 out_buf[4096];   // Output buffer for data
   char                 in_buf[4096];    // Input buffer for data
   int                  retcode;         // Return code
-
+  int                  usernum = 0;     //different instances of weblite for diff users
 #ifdef WIN
   // This stuff initializes winsock
   WSAStartup(wVersionRequested, &wsaData);
 #endif
 
+  // >>> Step #1 <<<
+  // Create a welcome socket
+  //   - AF_INET is Address Family Internet and SOCK_STREAM is streams
+  welcome_s = socket(AF_INET, SOCK_STREAM, 0);
+  if (welcome_s < 0)
+  {
+    printf("*** ERROR on Server Step 1 - socket() failed \n");
+    exit(-1);
+  }
+  // >>> Step 1b <<<
+  // declare clock functions and start program timer
+  clock_t start_t, check_t;
+  start_t=clock();
 
+  // >>> Step #2 <<<
+  // Fill-in server (my) address information and bind the welcome socket
+  server_addr.sin_family = AF_INET;                 // Address family to use
+  server_addr.sin_port = htons(PORT_NUM);           // Port number to use
+  server_addr.sin_addr.s_addr = htonl(INADDR_ANY);  // Listen on any IP address
+  retcode = bind(welcome_s, (struct sockaddr *)&server_addr,
+    sizeof(server_addr));
+  if (retcode < 0)
+  {
+    printf("*** ERROR on Server Step 2 - bind() failed \n");
+    exit(-1);
+  }
 
   while (1)
   {
-      // >>> Step #1 <<<
-      // Create a welcome socket
-      //   - AF_INET is Address Family Internet and SOCK_STREAM is streams
-      welcome_s = socket(AF_INET, SOCK_STREAM, 0);
-      if (welcome_s < 0)
-      {
-        printf("*** ERROR - socket() failed \n");
-        exit(-1);
-      }
-      // >>> Step 1b <<<
-      // declare clock functions and start program timer
-      clock_t start_t, check_t;
-      start_t=clock();
-
-      // >>> Step #2 <<<
-      // Fill-in server (my) address information and bind the welcome socket
-      server_addr.sin_family = AF_INET;                 // Address family to use
-      server_addr.sin_port = htons(PORT_NUM);           // Port number to use
-      server_addr.sin_addr.s_addr = htonl(INADDR_ANY);  // Listen on any IP address
-      retcode = bind(welcome_s, (struct sockaddr *)&server_addr,
-        sizeof(server_addr));
-      if (retcode < 0)
-      {
-        printf("*** ERROR - bind() failed \n");
-        exit(-1);
-      }
+      
 
       // >>> Step #3 <<<
       // Listen on welcome socket for a connection
@@ -142,7 +142,7 @@ int main()
     connect_s = accept(welcome_s, (struct sockaddr *)&client_addr, &addr_len);
     if (connect_s < 0)
     {
-      printf("*** ERROR - accept() failed \n");
+      printf("*** ERROR on Server Step 3 - accept() failed \n");
       exit(-1);
     }
 
@@ -204,7 +204,7 @@ int main()
       retcode = send(connect_s, out_buf, (strlen(out_buf) + 1), 0);
       if (retcode < 0)
       {
-        printf("*** ERROR - send() failed \n");
+        printf("*** ERROR on Server Step 5 - send() failed \n");
         exit(-1);
       }
 
@@ -213,7 +213,7 @@ int main()
       retcode = recv(connect_s, in_buf, sizeof(in_buf), 0);
       if (retcode < 0)
       {
-        printf("*** ERROR - recv() failed \n");
+        printf("*** ERROR on Server Step 6 - recv() failed \n");
         exit(-1);
       }
       char *recieved = Decrypt(in_buf, SCRT);
@@ -223,7 +223,23 @@ int main()
       if (isEqual(recieved, connection1.nonce, NONCE_SIZE))  //if decoded message is the same as the nonce, connect
       {
         printf("Authentification successful, connecting...\n");
-        weblite1();
+
+      // >>> Step #6b <<<
+      // Port knocking phase
+        
+        switch (usernum)
+        {
+          case 0: usernum++;
+                  printf("Running case 0");
+                  weblite1(1000);
+                  continue;
+
+          case 1: usernum++;
+                  printf("Running case 1");
+                  weblite1(2000);
+                  continue;
+
+        }
       }
       else  //otherwise, Trudy is afoot!  
       {
@@ -239,13 +255,13 @@ int main()
         retcode = closesocket(welcome_s);
         if (retcode < 0)
         {
-          printf("*** ERROR - closesocket() failed \n");
+          printf("*** ERROR on Server Step 7 - closesocket() failed \n");
           exit(-1);
         }
         retcode = closesocket(connect_s);
         if (retcode < 0)
         {
-          printf("*** ERROR - closesocket() failed \n");
+          printf("*** ERROR on Server Step 7 - closesocket() failed \n");
           exit(-1);
         }
       #endif

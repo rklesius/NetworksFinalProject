@@ -52,14 +52,13 @@
 #include "weblite1.h"
 
 //----- Defines -------------------------------------------------------------
-#define  PORT_NUM            8080     // Port number for Web server
 #define  BUF_SIZE            4096     // Buffer size (big enough for a GET)
 
 
 
 
 //===== Main program ========================================================
-void weblite1()
+void weblite1(int portnum)
 {
 #ifdef WIN
   WORD wVersionRequested = MAKEWORD(1,1);  // Stuff for WSA functions
@@ -94,12 +93,12 @@ void weblite1()
 
   // Fill-in server (my) address information and bind the socket
   server_addr.sin_family = AF_INET;
-  server_addr.sin_port = htons(PORT_NUM);
+  server_addr.sin_port = htons(portnum);
   server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
   retcode = bind(server_s, (struct sockaddr *)&server_addr, sizeof(server_addr));
   if (retcode < 0)
   {
-    printf("*** ERROR - bind() failed \n");
+    printf("*** ERROR on Weblite - bind() failed \n");
     exit(-1);
   }
 
@@ -107,7 +106,7 @@ void weblite1()
   listen(server_s, 100);
 
   // Main loop to accept connections and then spin-off thread to handle the GET
-  printf(">>> weblite is running on port %d <<< \n", PORT_NUM);
+  printf(">>> weblite is running on port %d <<< \n", portnum);
   while(1)
   {
     if (clock() > 10000)
@@ -118,7 +117,7 @@ void weblite1()
     client_s = accept(server_s, (struct sockaddr *)&client_addr, &addr_len);
     if (client_s == -1)
     {
-      printf("ERROR - Unable to create a socket \n");
+      printf("ERROR on Weblite  - Unable to create a socket \n");
       exit(1);
     }
 
@@ -129,7 +128,7 @@ void weblite1()
     if (pthread_create(&thread_id, NULL, handle_get, (void *)client_s) != 0)
 #endif
     {
-      printf("ERROR - Unable to create a thread to handle the GET \n");
+      printf("ERROR on Weblite  - Unable to create a thread to handle the GET \n");
       exit(1);
     }
   }
@@ -163,7 +162,7 @@ void *handle_get(void *in_arg)
   // If the recv() return code is bad then bail-out (see note #3)
   if (retcode <= 0)
   {
-    printf("ERROR - Receive failed --- probably due to dropped connection \n");
+    printf("ERROR on Weblite  - Receive failed --- probably due to dropped connection \n");
 #ifdef WIN
     closesocket(client_s);
     _endthread();
@@ -180,7 +179,7 @@ void *handle_get(void *in_arg)
   // Check if command really is a GET, if not then bail-out
   if (strcmp(command, "GET") != 0)
   {
-    printf("ERROR - Not a GET --- received command = '%s' \n", command);
+    printf("ERROR on Weblite  - Not a GET --- received command = '%s' \n", command);
 #ifdef WIN
     closesocket(client_s);
     _endthread();

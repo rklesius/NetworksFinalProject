@@ -39,7 +39,7 @@
 
 
 //----- Function prototypes -------------------------------------------------
-void weblite1();
+void weblite1(int portnum);
 
 #ifdef WIN
   void handle_get(void *in_arg);   // Windows thread function to handle GET
