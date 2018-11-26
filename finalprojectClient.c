@@ -133,7 +133,7 @@ int main()
     exit(-1);
   }
   free(encrypted);  //deallocate encrypted memory
-   
+
   // >>> Step #5 <<<
   // Close the client socket
 #ifdef WIN

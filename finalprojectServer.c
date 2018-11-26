@@ -142,7 +142,7 @@ int main()
     connect_s = accept(welcome_s, (struct sockaddr *)&client_addr, &addr_len);
     if (connect_s < 0)
     {
-      printf("*** ERROR on Server Step 3 - accept() failed \n");
+      printf("*** ERROR on Server Step 4 - accept() failed \n");
       exit(-1);
     }
 
@@ -222,24 +222,46 @@ int main()
       //Check if connection1.nonce is the same as recieved message
       if (isEqual(recieved, connection1.nonce, NONCE_SIZE))  //if decoded message is the same as the nonce, connect
       {
-        printf("Authentification successful, connecting...\n");
+        printf("Authentification successful, attempting port knocking\n");
 
       // >>> Step #6b <<<
-      // Port knocking phase
+      // This is where we need multithreading to run these weblite servers. The switch would allow for up to 10 users 
         
         switch (usernum)
         {
           case 0: usernum++;
-                  printf("Running case 0");
                   weblite1(1000);
                   continue;
-
           case 1: usernum++;
-                  printf("Running case 1");
-                  weblite1(2000);
+                  weblite1(1001);
+                  continue;
+          case 2: usernum++;
+                  weblite1(1002);
+                  continue;
+          case 3: usernum++;
+                  weblite1(1003);
+                  continue;
+          case 4: usernum++;
+                  weblite1(1004);
+                  continue;
+          case 5: usernum++;
+                  weblite1(1005);
+                  continue;
+          case 6: usernum++;
+                  weblite1(1006);
+                  continue;
+          case 7: usernum++;
+                  weblite1(1007);
+                  continue;
+          case 8: usernum++;
+                  weblite1(1008);
+                  continue;
+          case 9: usernum=0;
+                  weblite1(1009);
                   continue;
 
         }
+        
       }
       else  //otherwise, Trudy is afoot!  
       {
@@ -291,3 +313,4 @@ int main()
   // Return zero and terminate
   return(0);
 }
+
